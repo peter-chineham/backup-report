@@ -18,11 +18,20 @@ today_date = today_date.strftime("%d%b%Y")
 backup = -1
 backups = ["NTI50-C", "NTI50-D", "Nspire-pat-C", "RPi3-5-pihome"]
 seq = None
-log_file = open('D:\\users\\vinntec\\Downloads\\rsync', 'r')
+log_file = open('D:\\users\\vinntec\\Downloads\\rsync', 'r', encoding='utf8', errors='ignore')
 report = open("reports\\backup " + today_date + ".txt", 'w')
+start_msg = ""
+building = False
 for inar in log_file:
     inar = inar[:len(inar)-1] # remove newline
+#    print(inar)
     ix = inar.find("building file list")
+    if ix != -1:
+        building = True
+    else:
+        ix = inar.find("receiving file list") # cater for PULL
+        if ix != -1:
+            building = False
 #    if inar[28:46] == "building file list":
     if ix != -1:
         start_msg = ix
@@ -41,8 +50,16 @@ for inar in log_file:
         if backup != 0:
             report.write('\n')
         report.write(seq + " Backup of " + backups[backup] + '\n')
-#    elif inar[20:27] == seq and (inar[28] != '>' and inar[28] != '.' and inar[28:30] != "cd"):
-    elif inar[start_seq:end_seq] == seq and (inar[start_msg] != '>' and inar[start_msg] != '.' and inar[start_msg + 1] != 'd'):
+    elif building == False:
+        start_seq = inar.find('[') + 1
+        if start_seq == -1:
+            print("Error - unable to find '['")
+        end_seq = inar.find("]")
+        if end_seq == -1:
+            print("Error - unable to find ']'")
+        seq = inar[start_seq:end_seq]
+       
+    if inar[start_seq:end_seq] == seq and (inar[start_msg] != '>' and inar[start_msg] != '.' and inar[start_msg + 1] != 'd'):
         # Message about this run
 #        print("Message about this run")
 #        report.write(inar[28:] + '\n')
@@ -52,6 +69,7 @@ for inar in log_file:
         # file backup found
 #        print("File backup found")
 #        report.write(inar[40:] + '\n')
+#        print("start_msg", start_msg)
         report.write(inar[start_msg + 12:] + '\n')
 
 print('Backup Report Complete')
