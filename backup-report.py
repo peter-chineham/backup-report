@@ -8,7 +8,8 @@ from datetime import date
 
 def prompter():
     # wait for user input - at the end of the program and for debugging
-    input("Press ENTER to continue...")
+    print("Press ENTER to continue...")
+    input()
 
 # M A I N L I N E
 # convert date into a form suitable for the report file
